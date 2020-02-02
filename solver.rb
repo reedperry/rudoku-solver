@@ -1,8 +1,13 @@
 class Board
+  # Divide the board up into thirds
   @@first_third = 0..2
   @@second_third = 3..5
   @@third_third = 6..8
 
+  # There are 9 sub squares, each containing 9 individual squares on the board
+  #
+  # TODO This hasn't turned out to be a very nice way to use these in code,
+  # seems better to have a value pair representing both the vertical and horizontal area
   TopLeft = 'top-left'
   TopCenter = 'top-center'
   TopRight = 'top-right'
@@ -16,11 +21,12 @@ class Board
   def initialize
     @squares = Array.new(9) {Array.new(9)}
 
-    0.upto(8) { |i| 
-      0.upto(8) { |j| 
-        @squares[i][j] = rand(5) > 3 ? rand(8) + 1 : nil
-      }
-    }
+    @squares = generate_game
+    # 0.upto(8) { |i| 
+    #   0.upto(8) { |j| 
+    #     @squares[i][j] = rand(5) > 3 ? rand(8) + 1 : nil
+    #   }
+    # }
   end
 
   def isValid(row, col, number)
@@ -35,8 +41,8 @@ class Board
       return false
     else
       sub_square = nil
-      # case/when works, but not sure it actually helps readability 
-      if @@first_third.include? row
+      case row
+      when @@first_third
         case col
         when @@first_third
           sub_square = TopLeft
@@ -45,27 +51,22 @@ class Board
         when @@third_third
           sub_square = TopRight
         end
-        # if @@first_third.include? col
-        #   sub_square = TopLeft
-        # elsif @@second_third.include? col
-        #   sub_square = TopCenter
-        # elsif @@third_third.include? col
-        #   sub_square = TopRight
-        # end
-      elsif @@second_third.include? row
-        if @@first_third.include? col
+      when @@second_third
+        case col
+        when @@first_third
           sub_square = CenterLeft
-        elsif @@second_third.include? col
+        when @@second_third
           sub_square = Center
-        elsif @@third_third.include? col
+        when @@third_third
           sub_square = CenterRight
         end
-      elsif @@third_third.include? row
-        if @@first_third.include? col
+      when @@third_third
+        case col
+        when @@first_third
           sub_square = BottomLeft
-        elsif @@second_third.include? col
+        when @@second_third
           sub_square = BottomCenter
-        elsif @@third_third.include? col
+        when @@third_third
           sub_square = BottomRight
         end
       end
@@ -114,6 +115,20 @@ class Board
     end
     print("-------------------\n")
   end
+end
+
+def generate_game
+  starting_state = Array.new(9) {Array.new(9)}
+  starting_state[0] = [nil, 3, nil, nil, 7, nil, 5, nil, nil]
+  starting_state[1] = [nil, 2, 1, nil, nil, nil, nil, 6, 9]
+  starting_state[2] = [5, 4, nil, nil, nil, nil, 1, nil, nil]
+  starting_state[3] = [nil, nil, nil, 9, nil, nil, nil, nil, nil]
+  starting_state[4] = [8, 9, 4, 2, 6, 3, 7, 1, 5]
+  starting_state[5] = [nil, nil, nil, nil, nil, 7, nil, nil, nil]
+  starting_state[6] = [nil, nil, 3, nil, nil, nil, nil, 2, 1]
+  starting_state[7] = [1, 7, nil, nil, nil, 6, 4, 8, nil]
+  starting_state[8] = [nil, nil, 9, nil, 3, nil, nil, 5, nil]
+  return starting_state
 end
 
 board = Board.new
