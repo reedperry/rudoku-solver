@@ -19,25 +19,15 @@ class Board
   BottomRight = 'bottom-right'
 
   def initialize
-    @squares = Array.new(9) {Array.new(9)}
-
     @squares = generate_game
-    # 0.upto(8) { |i| 
-    #   0.upto(8) { |j| 
-    #     @squares[i][j] = rand(5) > 3 ? rand(8) + 1 : nil
-    #   }
-    # }
   end
 
-  def isValid(row, col, number)
+  def is_valid(row, col, number)
     if @squares[row][col] != nil
-      puts "square [#{row}][#{col}] is not empty"
       return false
     elsif @squares[row].include? number
-      puts "row #{row} contains #{number}"
       return false
     elsif @squares.collect { |r| r[col] }.include? number
-      puts "col #{col} contains #{number}"
       return false
     else
       sub_square = nil
@@ -71,8 +61,7 @@ class Board
         end
       end
 
-      if sub_square != nil and is_number_in_sub_square(sub_square, number)
-        puts "sub square #{sub_square} contains #{number}"
+      if sub_square != nil && is_number_in_sub_square(sub_square, number)
         return false
       end
     end
@@ -104,7 +93,7 @@ class Board
     return false
   end
 
-  def printBoard
+  def print_board
     print("___________________\n")
     for r in @squares
       print("|")
@@ -115,6 +104,20 @@ class Board
     end
     print("-------------------\n")
   end
+
+  def fill_square(row, col)
+    # puts "Filling square " + row.to_s + " " + col.to_s
+    num = 1
+    num += 1 while !is_valid(row, col, num) && num < 10
+
+    if num < 10
+      @squares[row][col] = num
+      return num
+    else
+      return nil
+    end
+  end
+
 end
 
 def generate_game
@@ -132,12 +135,22 @@ def generate_game
 end
 
 board = Board.new
-puts board.printBoard
+puts board.print_board
 
-print "row? "
-row = gets.to_i
-print "col? "
-col = gets.to_i
-print "number? "
-num = gets.to_i
-puts board.isValid(row, col, num)
+row = 0
+col = 0
+50.times do
+  num = board.fill_square(row, col)
+  if col == 8
+    col = 0
+    row += 1
+  else
+    col += 1
+  end
+end
+
+board.print_board
+
+
+
+
