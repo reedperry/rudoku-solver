@@ -1,7 +1,3 @@
 # rudoku-solver
 
-A sudoku solver written in Ruby (or perhaps one day it will be).  
-
-So far, it doesn't solve Sudokus, and I barely know any Ruby.
-I'm working on improving both of those things :)
-
+A sudoku solver written in Ruby, mostly as a way to learn some Ruby. It solves puzzles, but is still rough around the edges.

@@ -99,10 +99,6 @@ class Board
   def fill_square(row, col)
     num = @squares[row][col] == 0 ? 1 : @squares[row][col] + 1
 
-    if @squares[row][col] != 0
-      # puts "#{row}, #{col} already has a number, starting from #{num}"
-    end
-
     # Clear out the square we're about to try to fill
     @squares[row][col] = 0
 
@@ -175,9 +171,9 @@ last_filled = nil
 row = 0
 col = 0
 
-20000.times do |x|
-  if row == -1 || col == -1
-    puts "REACHED END OF BOARD after iteration " + x.to_s 
+1000000.times do |x|
+  if row == -1 && col == -1
+    puts "FINISHED PUZZLE after iteration " + x.to_s 
     break
   end
 
@@ -187,16 +183,8 @@ col = 0
   end
 
   num = board.fill_square(row, col)
-  if num == 0
-    last_filled = nil
-  else
-    last_filled = [row, col]
-  end
-
-  if last_filled != nil
-    filled_squares.push(last_filled)
-  end
-
+  last_filled = num == 0 ? nil : [row, col]
+  filled_squares.push(last_filled) unless last_filled == nil
   row, col = determine_next_to_fill(row, col, filled_squares, num == 0, board)
 end
 
