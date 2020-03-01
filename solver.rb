@@ -5,18 +5,13 @@ def determine_next_to_fill(row, col, filled_squares, backtrack, board)
   end
 
   if backtrack == true
-    # puts "couldn't fill #{[row,col]}"
-    # puts "filled squares: #{filled_squares}"
-
     last = filled_squares.pop
     if last != nil
-      # puts "try backtracking to #{last}"
       return last
     else
       return board.get_first_unfilled_square
     end
   else
-    # puts "searching forward from #{[row,col]}"
     if col == 8
       col = 0
       row += 1
@@ -30,23 +25,9 @@ end
 
 class Board
   # Divide the board up into thirds
-  @@first_third = 0..2
-  @@second_third = 3..5
-  @@third_third = 6..8
-
-  # There are 9 sub squares, each containing 9 individual squares on the board
-  #
-  # TODO This hasn't turned out to be a very nice way to use these in code,
-  # seems better to have a value pair representing both the vertical and horizontal area
-  TopLeft = 'top-left'
-  TopCenter = 'top-center'
-  TopRight = 'top-right'
-  CenterLeft = 'center-left'
-  Center = 'center'
-  CenterRight = 'center-right'
-  BottomLeft = 'bottom-left'
-  BottomCenter = 'bottom-center'
-  BottomRight = 'bottom-right'
+  @@first_box = 0..2
+  @@second_box = 3..5
+  @@third_box = 6..8
 
   def initialize(lines)
     @squares = lines
@@ -60,79 +41,59 @@ class Board
     elsif @squares.collect { |r| r[col] }.include? number
       return false
     else
-      sub_square = 0
-      case row
-      when @@first_third
-        case col
-        when @@first_third
-          sub_square = TopLeft
-        when @@second_third
-          sub_square = TopCenter
-        when @@third_third
-          sub_square = TopRight
-        end
-      when @@second_third
-        case col
-        when @@first_third
-          sub_square = CenterLeft
-        when @@second_third
-          sub_square = Center
-        when @@third_third
-          sub_square = CenterRight
-        end
-      when @@third_third
-        case col
-        when @@first_third
-          sub_square = BottomLeft
-        when @@second_third
-          sub_square = BottomCenter
-        when @@third_third
-          sub_square = BottomRight
-        end
-      end
-
-      if sub_square != 0 && is_number_in_sub_square(sub_square, number)
+      box = determine_containing_box(row, col)
+      if box != nil && is_number_in_box(box, number)
         return false
       end
     end
     return true
   end
 
-  def is_number_in_sub_square(sub_square, number)
-    case sub_square
-    when TopLeft
-      return @squares.slice(0, 3).map { |r| r.slice(0, 3) }.flatten.include? number
-    when TopCenter
-      return @squares.slice(0, 3).map { |r| r.slice(3, 3) }.flatten.include? number
-    when TopRight
-      return @squares.slice(0, 3).map { |r| r.slice(6, 3) }.flatten.include? number
-    when CenterLeft
-      return @squares.slice(3, 3).map { |r| r.slice(0, 3) }.flatten.include? number
-    when Center
-      return @squares.slice(3, 3).map { |r| r.slice(3, 3) }.flatten.include? number
-    when CenterRight
-      return @squares.slice(3, 3).map { |r| r.slice(6, 3) }.flatten.include? number
-    when BottomLeft
-      return @squares.slice(3, 3).map { |r| r.slice(0, 3) }.flatten.include? number
-    when BottomCenter
-      return @squares.slice(3, 3).map { |r| r.slice(3, 3) }.flatten.include? number
-    when BottomRight
-      return @squares.slice(3, 3).map { |r| r.slice(6, 3) }.flatten.include? number
+  def determine_containing_box(row, col)
+    box = nil
+    case row
+    when @@first_box
+      box = [:top]
+    when @@second_box
+      box = [:center]
+    when @@third_box
+      box = [:bottom]
+    end
+
+    case col
+    when @@first_box
+      box.push(:left)
+    when @@second_box
+      box.push(:center)
+    when @@third_box
+      box.push(:right)
+    end
+
+    return box
+  end
+
+  def is_number_in_box(box, number)
+    rows = nil
+    cols = nil
+    case box[0]
+    when :top
+      rows = @squares.slice(0, 3)
+    when :center
+      rows = @squares.slice(3, 3)
+    when :bottom
+      rows = @squares.slice(6, 3)
+    end
+
+    case box[1]
+    when :left
+      return rows.map { |r| r.slice(0, 3) }.flatten.include? number
+    when :center
+      return rows.map { |r| r.slice(3, 3) }.flatten.include? number
+    when :right
+      return rows.map { |r| r.slice(6, 3) }.flatten.include? number
     end
 
     return false
-  end
-
-  def print_board
-    print("___________________\n")
-    for r in @squares
-      print("|")
-      for n in r
-        print n != 0 ? "#{n}|" : ' |'
-      end
-      puts
-    end
-    print("-------------------\n")
   end
 
   def fill_square(row, col)
@@ -175,6 +136,18 @@ class Board
     end
   end
 
+  def print_board
+    print("___________________\n")
+    for r in @squares
+      print("|")
+      for n in r
+        print n != 0 ? "#{n}|" : ' |'
+      end
+      puts
+    end
+    print("-------------------\n")
+  end
+
 end
 
 def read_game_file path
@@ -202,9 +175,9 @@ last_filled = nil
 row = 0
 col = 0
 
-100.times do |x|
+20000.times do |x|
   if row == -1 || col == -1
-    puts "REACHED END OF BOARD"
+    puts "REACHED END OF BOARD after iteration " + x.to_s 
     break
   end
 
