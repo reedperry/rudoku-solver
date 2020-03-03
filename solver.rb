@@ -1,28 +1,3 @@
-def determine_next_to_fill(row, col, filled_squares, backtrack, board)
-  # End of game. There's definitely a better solution for this
-  if row == 8 && col == 8
-    return [-1,-1]
-  end
-
-  if backtrack == true
-    last = filled_squares.pop
-    if last != nil
-      return last
-    else
-      return board.get_first_unfilled_square
-    end
-  else
-    if col == 8
-      col = 0
-      row += 1
-    else
-      col += 1
-    end
-  end
-
-  return [row, col]
-end
-
 class Board
   # Divide the board up into thirds
   @@first_box = 0..2
@@ -97,9 +72,11 @@ class Board
   end
 
   def fill_square(row, col)
-    num = @squares[row][col] == 0 ? 1 : @squares[row][col] + 1
+    num = @squares[row][col] + 1
 
     # Clear out the square we're about to try to fill
+    # TODO Need to clear out the rest of the puzzle to avoid interfering with
+    # validity checks here
     @squares[row][col] = 0
 
     num += 1 while !is_valid(row, col, num) && num < 10
@@ -132,16 +109,42 @@ class Board
     end
   end
 
-  def print_board
-    print("___________________\n")
+  def to_s
+    s = "___________________\n"
     for r in @squares
-      print("|")
+      s += "|"
       for n in r
-        print n != 0 ? "#{n}|" : ' |'
+        s += n != 0 ? "#{n}|" : ' |'
       end
-      puts
+      s += "\n"
     end
-    print("-------------------\n")
+    s += "-------------------\n"
+    return s
+  end
+
+  def determine_next_to_fill(row, col, filled_squares, backtrack)
+    # End of game. There's definitely a better solution for this
+    if row == 8 && col == 8
+      return [-1,-1]
+    end
+
+    if backtrack == true
+      last = filled_squares.pop
+      if last != nil
+        return last
+      else
+        return get_first_unfilled_square
+      end
+    else
+      if col == 8
+        col = 0
+        row += 1
+      else
+        col += 1
+      end
+    end
+
+    return [row, col]
   end
 
 end
@@ -162,7 +165,7 @@ end
 
 lines = read_game_file ARGV[0]
 board = Board.new(lines)
-puts board.print_board
+puts board
 
 starting_squares = board.collect_starting_squares
 
@@ -178,14 +181,14 @@ col = 0
   end
 
   if starting_squares.include? [row,col]
-    row, col = determine_next_to_fill(row, col, filled_squares, false, board)
+    row, col = board.determine_next_to_fill(row, col, filled_squares, false)
     next
   end
 
   num = board.fill_square(row, col)
   last_filled = num == 0 ? nil : [row, col]
   filled_squares.push(last_filled) unless last_filled == nil
-  row, col = determine_next_to_fill(row, col, filled_squares, num == 0, board)
+  row, col = board.determine_next_to_fill(row, col, filled_squares, num == 0)
 end
 
-board.print_board
+puts board
