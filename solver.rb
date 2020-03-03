@@ -4,8 +4,11 @@ class Board
   @@second_box = 3..5
   @@third_box = 6..8
 
+  attr_reader :starting_squares
+
   def initialize(lines)
     @squares = lines
+    @starting_squares = collect_starting_squares
   end
 
   def is_valid(row, col, number)
@@ -71,13 +74,20 @@ class Board
     return false
   end
 
+  def clear_squares_from(row, col)
+    while row < 9
+      while col < 9
+        @squares[row][col] = 0 unless @starting_squares.include? [row, col]
+        col += 1
+      end
+      col = 0
+      row += 1
+    end
+  end
+
   def fill_square(row, col)
     num = @squares[row][col] + 1
-
-    # Clear out the square we're about to try to fill
-    # TODO Need to clear out the rest of the puzzle to avoid interfering with
-    # validity checks here
-    @squares[row][col] = 0
+    clear_squares_from(row, col)
 
     num += 1 while !is_valid(row, col, num) && num < 10
 
@@ -101,10 +111,9 @@ class Board
   end
 
   def get_first_unfilled_square
-    starting_squares = collect_starting_squares
     9.times do |row|
       9.times do |col|
-        return [row, col] unless starting_squares.include? [row, col]
+        return [row, col] unless @starting_squares.include? [row, col]
       end
     end
   end
@@ -167,20 +176,16 @@ lines = read_game_file ARGV[0]
 board = Board.new(lines)
 puts board
 
-starting_squares = board.collect_starting_squares
-
 filled_squares = []
 last_filled = nil
 row = 0
 col = 0
+iterations = 0
 
-1000000.times do |x|
-  if row == -1 && col == -1
-    puts "FINISHED PUZZLE after iteration " + x.to_s 
-    break
-  end
+until row == -1 && col == -1
+  iterations += 1
 
-  if starting_squares.include? [row,col]
+  if board.starting_squares.include? [row,col]
     row, col = board.determine_next_to_fill(row, col, filled_squares, false)
     next
   end
@@ -192,3 +197,4 @@ col = 0
 end
 
 puts board
+puts "FINISHED PUZZLE after iteration " + iterations.to_s 
