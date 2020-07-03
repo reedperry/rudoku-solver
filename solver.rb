@@ -7,22 +7,19 @@ class Board
   attr_reader :starting_squares
 
   def initialize(lines)
-    @squares = lines
+    @grid = lines
     @starting_squares = collect_starting_squares
   end
 
-  def is_valid(row, col, number)
-    if @squares[row][col] != 0
+  def is_number_valid_in_square(row, col, number)
+    if is_square_occupied(row, col)
       return false
-    elsif @squares[row].include? number
+    elsif is_number_in_row(number, row)
       return false
-    elsif @squares.collect { |r| r[col] }.include? number
+    elsif is_number_in_column(number, col)
       return false
-    else
-      box = determine_containing_box(row, col)
-      if box != nil && is_number_in_box(box, number)
-        return false
-      end
+    elsif is_number_in_same_box_as_square(row, col, number)
+      return false
     end
     return true
   end
@@ -50,16 +47,37 @@ class Board
     return box
   end
 
+  def is_square_occupied(row, col)
+    return @grid[row][col] != 0
+  end
+
+  def is_number_in_row(number, row)
+    return @grid[row].include? number
+  end
+
+  def is_number_in_column(number, col)
+    return @grid.collect { |r| r[col] }.include? number
+  end
+
+  def is_number_in_same_box_as_square(row, col, number)
+    box = determine_containing_box(row, col)
+    if box != nil && is_number_in_box(box, number)
+      return true
+    else
+      return false
+    end
+  end
+
   def is_number_in_box(box, number)
     rows = nil
     cols = nil
     case box[0]
     when :top
-      rows = @squares.slice(0, 3)
+      rows = @grid.slice(0, 3)
     when :center
-      rows = @squares.slice(3, 3)
+      rows = @grid.slice(3, 3)
     when :bottom
-      rows = @squares.slice(6, 3)
+      rows = @grid.slice(6, 3)
     end
 
     case box[1]
@@ -77,7 +95,7 @@ class Board
   def clear_squares_from(row, col)
     while row < 9
       while col < 9
-        @squares[row][col] = 0 unless @starting_squares.include? [row, col]
+        @grid[row][col] = 0 unless @starting_squares.include? [row, col]
         col += 1
       end
       col = 0
@@ -86,13 +104,13 @@ class Board
   end
 
   def fill_square(row, col)
-    num = @squares[row][col] + 1
+    num = @grid[row][col] + 1
     clear_squares_from(row, col)
 
-    num += 1 while !is_valid(row, col, num) && num < 10
+    num += 1 while !is_number_valid_in_square(row, col, num) && num < 10
 
     if num < 10
-      @squares[row][col] = num
+      @grid[row][col] = num
       return num
     else
       return 0
@@ -103,7 +121,7 @@ class Board
     filled = Array.new
     9.times do |row|
       9.times do |col|
-        filled.push([row, col]) if @squares[row][col] != 0
+        filled.push([row, col]) if @grid[row][col] != 0
       end
     end
 
@@ -120,7 +138,7 @@ class Board
 
   def to_s
     s = "___________________\n"
-    for r in @squares
+    for r in @grid
       s += "|"
       for n in r
         s += n != 0 ? "#{n}|" : ' |'
@@ -197,4 +215,4 @@ until row == -1 && col == -1
 end
 
 puts board
-puts "FINISHED PUZZLE after iteration " + iterations.to_s 
+puts "FINISHED PUZZLE after iteration " + iterations.to_s
