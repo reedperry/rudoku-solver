@@ -1,8 +1,8 @@
 class Board
   # Divide the board up into thirds
-  @@first_box = 0..2
-  @@second_box = 3..5
-  @@third_box = 6..8
+  FIRST_BOX = 0..2
+  SECOND_BOX = 3..5
+  THIRD_BOX = 6..8
 
   attr_reader :starting_squares
 
@@ -27,20 +27,20 @@ class Board
   def determine_containing_box(row, col)
     box = nil
     case row
-    when @@first_box
+    when FIRST_BOX
       box = [:top]
-    when @@second_box
+    when SECOND_BOX
       box = [:center]
-    when @@third_box
+    when THIRD_BOX
       box = [:bottom]
     end
 
     case col
-    when @@first_box
+    when FIRST_BOX
       box.push(:left)
-    when @@second_box
+    when SECOND_BOX
       box.push(:center)
-    when @@third_box
+    when THIRD_BOX
       box.push(:right)
     end
 
@@ -136,6 +136,43 @@ class Board
     end
   end
 
+  def determine_next_to_fill(row, col, filled_squares, backtrack)
+    # End of game. There's definitely a better solution for this
+    if reached_end_of_board(row, col)
+      return [-1,-1]
+    end
+
+    if backtrack == true
+      return find_backtrack_target(filled_squares)
+    else
+      row, col = next_square(row, col)
+    end
+
+    return [row, col]
+  end
+
+  def find_backtrack_target(filled_squares)
+    last_filled = filled_squares.pop
+    if last_filled != nil
+      return last_filled
+    else
+      return get_first_unfilled_square
+    end
+  end
+
+
+  def next_square(row, col)
+    if col == 8
+      return [row + 1, 0]
+    else
+      return [row, col + 1]
+    end
+  end
+
+  def reached_end_of_board(row, col)
+    return row == 8 && col == 8
+  end
+
   def to_s
     s = "___________________\n"
     for r in @grid
@@ -149,32 +186,8 @@ class Board
     return s
   end
 
-  def determine_next_to_fill(row, col, filled_squares, backtrack)
-    # End of game. There's definitely a better solution for this
-    if row == 8 && col == 8
-      return [-1,-1]
-    end
+end #End Board
 
-    if backtrack == true
-      last = filled_squares.pop
-      if last != nil
-        return last
-      else
-        return get_first_unfilled_square
-      end
-    else
-      if col == 8
-        col = 0
-        row += 1
-      else
-        col += 1
-      end
-    end
-
-    return [row, col]
-  end
-
-end
 
 def read_game_file path
   if !File.exist?(path)
