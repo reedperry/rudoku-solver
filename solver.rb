@@ -1,77 +1,77 @@
 class Board
   # Divide the board up into thirds
-  FIRST_BOX = 0..2
-  SECOND_BOX = 3..5
-  THIRD_BOX = 6..8
+  NONET_ONE = 0..2
+  NONET_TWO = 3..5
+  NONET_THREE = 6..8
 
-  attr_reader :starting_squares
+  attr_reader :initial_values
 
-  def initialize(lines)
-    @grid = lines
-    @starting_squares = collect_starting_squares
+  def initialize(rows)
+    @grid = rows
+    @initial_values = collect_initial_values
   end
 
-  def is_number_valid_in_square(row, col, number)
-    if is_square_occupied(row, col)
+  def number_valid_in_square?(row, col, number)
+    if square_occupied?(row, col)
       return false
-    elsif is_number_in_row(number, row)
+    elsif number_in_row?(number, row)
       return false
-    elsif is_number_in_column(number, col)
+    elsif number_in_column?(number, col)
       return false
-    elsif is_number_in_same_box_as_square(row, col, number)
+    elsif number_in_same_nonet_as_square?(number, row, col)
       return false
     end
-    return true
+    true
   end
 
-  def determine_containing_box(row, col)
-    box = nil
+  def find_containing_nonet(row, col)
+    nonet = nil
     case row
-    when FIRST_BOX
-      box = [:top]
-    when SECOND_BOX
-      box = [:center]
-    when THIRD_BOX
-      box = [:bottom]
+    when NONET_ONE
+      nonet = [:top]
+    when NONET_TWO
+      nonet = [:center]
+    when NONET_THREE
+      nonet = [:bottom]
     end
 
     case col
-    when FIRST_BOX
-      box.push(:left)
-    when SECOND_BOX
-      box.push(:center)
-    when THIRD_BOX
-      box.push(:right)
+    when NONET_ONE
+      nonet.push(:left)
+    when NONET_TWO
+      nonet.push(:center)
+    when NONET_THREE
+      nonet.push(:right)
     end
 
-    return box
+    nonet
   end
 
-  def is_square_occupied(row, col)
+  def square_occupied?(row, col)
     return @grid[row][col] != 0
   end
 
-  def is_number_in_row(number, row)
+  def number_in_row?(number, row)
     return @grid[row].include? number
   end
 
-  def is_number_in_column(number, col)
+  def number_in_column?(number, col)
     return @grid.collect { |r| r[col] }.include? number
   end
 
-  def is_number_in_same_box_as_square(row, col, number)
-    box = determine_containing_box(row, col)
-    if box != nil && is_number_in_box(box, number)
+  def number_in_same_nonet_as_square?(number, row, col)
+    nonet = find_containing_nonet(row, col)
+    if nonet != nil && number_in_nonet?(nonet, number)
       return true
     else
       return false
     end
   end
 
-  def is_number_in_box(box, number)
+  def number_in_nonet?(nonet, number)
     rows = nil
     cols = nil
-    case box[0]
+    case nonet[0]
     when :top
       rows = @grid.slice(0, 3)
     when :center
@@ -80,7 +80,7 @@ class Board
       rows = @grid.slice(6, 3)
     end
 
-    case box[1]
+    case nonet[1]
     when :left
       return rows.map { |r| r.slice(0, 3) }.flatten.include? number
     when :center
@@ -95,7 +95,7 @@ class Board
   def clear_squares_from(row, col)
     while row < 9
       while col < 9
-        @grid[row][col] = 0 unless @starting_squares.include? [row, col]
+        @grid[row][col] = 0 unless @initial_values.include? [row, col]
         col += 1
       end
       col = 0
@@ -107,7 +107,7 @@ class Board
     num = @grid[row][col] + 1
     clear_squares_from(row, col)
 
-    num += 1 while !is_number_valid_in_square(row, col, num) && num < 10
+    num += 1 while !number_valid_in_square?(row, col, num) && num < 10
 
     if num < 10
       @grid[row][col] = num
@@ -117,7 +117,7 @@ class Board
     end
   end
 
-  def collect_starting_squares
+  def collect_initial_values
     filled = Array.new
     9.times do |row|
       9.times do |col|
@@ -131,7 +131,7 @@ class Board
   def get_first_unfilled_square
     9.times do |row|
       9.times do |col|
-        return [row, col] unless @starting_squares.include? [row, col]
+        return [row, col] unless @initial_values.include? [row, col]
       end
     end
   end
@@ -194,18 +194,20 @@ def read_game_file path
     return
   end
   puts "Reading file #{path}..."
-  lines = []
+  rows = []
   file = File.open(path, 'r') do |f|
     f.each_line($/, chomp: true) do |l|
-      lines.push((l.split '').collect {|x| x.to_i })
+      rows.push((l.split '').collect {|x| x.to_i })
     end
   end
-  return lines
+  rows
 end
 
-lines = read_game_file ARGV[0]
-board = Board.new(lines)
+rows = read_game_file ARGV[0]
+board = Board.new(rows)
 puts board
+
+puts "Solving..."
 
 filled_squares = []
 last_filled = nil
@@ -216,7 +218,7 @@ iterations = 0
 until row == -1 && col == -1
   iterations += 1
 
-  if board.starting_squares.include? [row,col]
+  if board.initial_values.include? [row,col]
     row, col = board.determine_next_to_fill(row, col, filled_squares, false)
     next
   end
