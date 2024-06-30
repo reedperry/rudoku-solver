@@ -1,14 +1,15 @@
-class Board
-  # Divide the board up into thirds
-  NONET_ONE = 0..2
-  NONET_TWO = 3..5
-  NONET_THREE = 6..8
+require './rudoku'
 
+class Board
   attr_reader :initial_squares
 
   def initialize(rows)
     @grid = rows
     @initial_squares = collect_initial_squares
+  end
+
+  def initial_square?(row, col)
+    initial_squares.include?([row, col])
   end
 
   def number_valid_in_square?(row, col, number)
@@ -27,20 +28,20 @@ class Board
   def find_containing_nonet(row, col)
     nonet = nil
     case row
-    when NONET_ONE
+    when Rudoku::NONET_ONE
       nonet = [:top]
-    when NONET_TWO
+    when Rudoku::NONET_TWO
       nonet = [:center]
-    when NONET_THREE
+    when Rudoku::NONET_THREE
       nonet = [:bottom]
     end
 
     case col
-    when NONET_ONE
+    when Rudoku::NONET_ONE
       nonet.push(:left)
-    when NONET_TWO
+    when Rudoku::NONET_TWO
       nonet.push(:center)
-    when NONET_THREE
+    when Rudoku::NONET_THREE
       nonet.push(:right)
     end
 
@@ -48,7 +49,7 @@ class Board
   end
 
   def square_occupied?(row, col)
-    return @grid[row][col] != 0
+    return @grid[row][col] != Rudoku::EMPTY
   end
 
   def number_in_row?(number, row)
@@ -92,10 +93,10 @@ class Board
     return false
   end
 
-  def clear_squares_from(row, col)
+  def clear_squares_after(row, col)
     while row < 9
       while col < 9
-        @grid[row][col] = 0 unless @initial_squares.include? [row, col]
+        @grid[row][col] = Rudoku::EMPTY unless @initial_squares.include? [row, col]
         col += 1
       end
       col = 0
@@ -105,7 +106,7 @@ class Board
 
   def fill_square(row, col)
     num = @grid[row][col] + 1
-    clear_squares_from(row, col)
+    clear_squares_after(row, col)
 
     num += 1 while !number_valid_in_square?(row, col, num) && num < 10
 
@@ -113,7 +114,7 @@ class Board
       @grid[row][col] = num
       return num
     else
-      return 0
+      return Rudoku::EMPTY
     end
   end
 
@@ -121,7 +122,7 @@ class Board
     filled = Array.new
     9.times do |row|
       9.times do |col|
-        filled.push([row, col]) if @grid[row][col] != 0
+        filled.push([row, col]) if @grid[row][col] != Rudoku::EMPTY
       end
     end
 
@@ -162,8 +163,12 @@ class Board
 
   def find_next_empty_square(row, col)
     row, col = next_square(row, col)
-    while !reached_end_of_board?(row, col) && square_occupied?(row, col)
+    while square_occupied?(row, col) && !reached_end_of_board?(row, col)
       row, col = next_square(row, col)
+    end
+
+    if reached_end_of_board?(row, col)
+      return [-1, -1]
     end
 
     [row, col]
@@ -186,7 +191,7 @@ class Board
     for r in @grid
       s += "|"
       for n in r
-        s += n != 0 ? "#{n}|" : ' |'
+        s += n != Rudoku::EMPTY ? "#{n}|" : ' |'
       end
       s += "\n"
     end

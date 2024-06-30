@@ -1,4 +1,5 @@
 require './board'
+require './rudoku'
 
 def read_game_file path
   if !File.exist?(path)
@@ -29,15 +30,15 @@ iterations = 0
 until row == -1 && col == -1
   iterations += 1
 
-  if board.initial_squares.include? [row,col]
+  if board.initial_square?(row, col)
     row, col = board.determine_next_to_fill(row, col, filled_squares, false)
     next
   end
 
   filled_number = board.fill_square(row, col)
-  filled_squares.push([row, col]) unless filled_number == 0
+  filled_squares.push([row, col]) unless filled_number == Rudoku::EMPTY
 
-  row, col = board.determine_next_to_fill(row, col, filled_squares, filled_number == 0)
+  row, col = board.determine_next_to_fill(row, col, filled_squares, filled_number == Rudoku::EMPTY)
 end
 
 puts board
